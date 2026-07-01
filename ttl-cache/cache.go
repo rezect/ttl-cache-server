@@ -14,29 +14,32 @@ type Cache struct {
 	items map[string]item
 	mu    sync.RWMutex
 	done  chan struct{}
+	wg    sync.WaitGroup
 }
 
 func CacheNew() *Cache {
 	c := new(Cache)
 	c.items = make(map[string]item)
 	c.done = make(chan struct{})
-	go c.cleenupCacheLoop()
+	c.wg.Add(1)
+	go c.cleanupCacheLoop()
 
 	return c
 }
 
-func (c *Cache) cleenupCacheLoop() {
+func (c *Cache) cleanupCacheLoop() {
 	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-c.done:
+			c.wg.Done()
 			return
 		case <-ticker.C:
 			c.mu.Lock()
 			for cacheKey, cacheItem := range c.items {
 				currentExpireDate := cacheItem.expire
 				if time.Now().After(currentExpireDate) {
-					c.mu.Unlock()
 					delete(c.items, cacheKey)
 				}
 			}
@@ -58,22 +61,7 @@ func (c *Cache) Get(key string) (any, bool) {
 	val := currentItem.value
 
 	if time.Now().After(exp) {
-		c.mu.Lock()
-		currentItem, ok = c.items[key]
-		if !ok {
-			c.mu.Unlock()
-			return nil, false
-		}
-
-		exp = currentItem.expire
-		val = currentItem.value
-
-		if time.Now().After(exp) {
-			delete(c.items, key)
-			c.mu.Unlock()
-			return nil, false
-		}
-		c.mu.Unlock()
+		return nil, false
 	}
 
 	return val, true
@@ -110,13 +98,18 @@ func (c *Cache) Delete(key string) {
 
 func (c *Cache) Clear() {
 	c.mu.Lock()
-	c.items = make(map[string]item)
+	for key := range c.items {
+		delete(c.items, key)
+	}
 	c.mu.Unlock()
 }
 
 func (c *Cache) Stop() {
 	c.mu.Lock()
-	c.items = make(map[string]item)
-	close(c.done)
+	for key := range c.items {
+		delete(c.items, key)
+	}
 	c.mu.Unlock()
+	close(c.done)
+	c.wg.Wait()
 }
