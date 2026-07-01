@@ -1,7 +1,6 @@
-package main
+package cache
 
 import (
-	"fmt"
 	"sync"
 	"time"
 )
@@ -52,7 +51,6 @@ func (c *Cache) Get(key string) (any, bool) {
 	c.mu.RUnlock()
 
 	if !ok {
-		fmt.Println("key not found")
 		return nil, false
 	}
 
@@ -63,7 +61,6 @@ func (c *Cache) Get(key string) (any, bool) {
 		c.mu.Lock()
 		currentItem, ok = c.items[key]
 		if !ok {
-			fmt.Println("key not found")
 			c.mu.Unlock()
 			return nil, false
 		}
@@ -73,7 +70,6 @@ func (c *Cache) Get(key string) (any, bool) {
 
 		if time.Now().After(exp) {
 			delete(c.items, key)
-			fmt.Println("key is expired")
 			c.mu.Unlock()
 			return nil, false
 		}
@@ -85,7 +81,6 @@ func (c *Cache) Get(key string) (any, bool) {
 
 func (c *Cache) Set(key string, value any, ttl time.Duration) {
 	if ttl <= 0 {
-		fmt.Println("ERROR: ttl is not positive, insertion cancelled")
 		return
 	}
 
@@ -98,24 +93,19 @@ func (c *Cache) Set(key string, value any, ttl time.Duration) {
 	c.mu.Lock()
 	c.items[key] = new_item
 	c.mu.Unlock()
-
-	fmt.Printf("LOG: inserted '%v' value with '%v' ttl\n", value, ttl)
 }
 
 func (c *Cache) Delete(key string) {
 	c.mu.Lock()
-	currentItem, ok := c.items[key]
+	_, ok := c.items[key]
 
 	if !ok {
 		c.mu.Unlock()
-		fmt.Printf("WARNING: key '%v' is not exists, nothing to delete\n", key)
 		return
 	}
 
 	delete(c.items, key)
 	c.mu.Unlock()
-
-	fmt.Printf("LOG: key '%v' with value '%v' successfully deleted\n", key, currentItem)
 }
 
 func (c *Cache) Clear() {
@@ -124,7 +114,7 @@ func (c *Cache) Clear() {
 	c.mu.Unlock()
 }
 
-func (c *Cache) CloseCache() {
+func (c *Cache) Stop() {
 	c.mu.Lock()
 	c.items = make(map[string]item)
 	close(c.done)
