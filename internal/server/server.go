@@ -8,6 +8,7 @@ import (
 
 	"github.com/rezect/go-interview/internal/cache"
 	"github.com/rezect/go-interview/internal/middleware"
+	"github.com/rezect/go-interview/internal/response"
 )
 
 type Server struct {
@@ -36,7 +37,9 @@ func NewServer(addr string) *Server {
 
 func (s *Server) Handler() http.Handler {
 	mux := s.setupRoutes()
-	return middleware.LoggingMiddleware(mux)
+	recoverMiddleware := middleware.RecoverMiddleware(mux)
+	logMiddleware := middleware.LoggingMiddleware(recoverMiddleware)
+	return logMiddleware
 }
 
 func (s *Server) Start() error {
@@ -54,17 +57,17 @@ func (s *Server) Shutdown() error {
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"health": "Ok"})
+	response.WriteJSON(w, http.StatusOK, map[string]string{"health": "Ok"})
 }
 
 func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 	key := r.PathValue("key")
 	value, err := s.cache.Get(key)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
+		response.WriteJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"value": value})
+	response.WriteJSON(w, http.StatusOK, map[string]any{"value": value})
 }
 
 func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
@@ -72,30 +75,30 @@ func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 	var req PostRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+		response.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
 	defer r.Body.Close()
 
 	ttl, err := time.ParseDuration(req.Ttl)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Invalid TTL format. Valid formats for TTL is: 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'"})
+		response.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "Invalid TTL format. Valid formats for TTL is: 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'"})
 		return
 	}
 	err = s.cache.Set(key, req.Value, ttl)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+		response.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+	response.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 }
 
 func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 	key := r.PathValue("key")
 	err := s.cache.Delete(key)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
+		response.WriteJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -103,7 +106,7 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleClear(w http.ResponseWriter, r *http.Request) {
 	s.cache.Clear()
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	response.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (s *Server) setupRoutes() *http.ServeMux {
