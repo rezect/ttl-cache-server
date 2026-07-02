@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -48,28 +49,28 @@ func (c *Cache) cleanupCacheLoop() {
 	}
 }
 
-func (c *Cache) Get(key string) (any, bool) {
+func (c *Cache) Get(key string) (any, error) {
 	c.mu.RLock()
 	currentItem, ok := c.items[key]
 	c.mu.RUnlock()
 
 	if !ok {
-		return nil, false
+		return nil, fmt.Errorf("key not found")
 	}
 
 	exp := currentItem.expire
 	val := currentItem.value
 
 	if time.Now().After(exp) {
-		return nil, false
+		return nil, fmt.Errorf("key has expired")
 	}
 
-	return val, true
+	return val, nil
 }
 
-func (c *Cache) Set(key string, value any, ttl time.Duration) {
+func (c *Cache) Set(key string, value any, ttl time.Duration) error {
 	if ttl <= 0 {
-		return
+		return fmt.Errorf("TTL is not positive")
 	}
 
 	expire_time := time.Now().Add(ttl)
@@ -81,19 +82,23 @@ func (c *Cache) Set(key string, value any, ttl time.Duration) {
 	c.mu.Lock()
 	c.items[key] = new_item
 	c.mu.Unlock()
+
+	return nil
 }
 
-func (c *Cache) Delete(key string) {
+func (c *Cache) Delete(key string) error {
 	c.mu.Lock()
 	_, ok := c.items[key]
 
 	if !ok {
 		c.mu.Unlock()
-		return
+		return fmt.Errorf("key is not found")
 	}
 
 	delete(c.items, key)
 	c.mu.Unlock()
+
+	return nil
 }
 
 func (c *Cache) Clear() {

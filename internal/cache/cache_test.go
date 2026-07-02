@@ -26,10 +26,13 @@ func TestSetGet(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := CacheNew()
 
-			c.Set(tt.setKey, tt.setValue, tt.setTtl)
-			actualValue, ok := c.Get(tt.setKey)
+			err := c.Set(tt.setKey, tt.setValue, tt.setTtl)
 			if tt.isErrorExpected {
-				assert.False(t, ok)
+				assert.Error(t, err)
+			}
+			actualValue, err := c.Get(tt.setKey)
+			if tt.isErrorExpected {
+				assert.Error(t, err)
 			} else {
 				assert.Equal(t, tt.setValue, actualValue)
 			}
@@ -48,14 +51,14 @@ func TestTtl(t *testing.T) {
 	// Через 50мс ключ доступен
 	c.Set(setKey, setValue, setTtl)
 	time.Sleep(50 * time.Millisecond)
-	actualValue, ok := c.Get(setKey)
-	assert.True(t, ok)
+	actualValue, err := c.Get(setKey)
+	assert.NoError(t, err)
 	assert.Equal(t, setValue, actualValue)
 
 	// После истечения срока ключ не доступен
 	time.Sleep(100 * time.Millisecond)
-	actualValue, ok = c.Get(setKey)
-	assert.False(t, ok)
+	actualValue, err = c.Get(setKey)
+	assert.Error(t, err)
 	assert.Equal(t, nil, actualValue)
 	c.Stop()
 }
@@ -70,8 +73,8 @@ func TestSetReplace(t *testing.T) {
 	c.Set(setKey, setValue1, setTtl)
 	c.Set(setKey, setValue2, setTtl)
 
-	actualValue, ok := c.Get(setKey)
-	assert.True(t, ok)
+	actualValue, err := c.Get(setKey)
+	assert.NoError(t, err)
 	assert.Equal(t, setValue2, actualValue)
 
 	c.Stop()
@@ -85,8 +88,8 @@ func TestGetNull(t *testing.T) {
 
 	c.Set(setKey, setValue, setTtl)
 
-	actualValue, ok := c.Get("not a key")
-	assert.False(t, ok)
+	actualValue, err := c.Get("not a key")
+	assert.Error(t, err)
 	assert.Equal(t, nil, actualValue)
 
 	c.Stop()
@@ -105,14 +108,14 @@ func TestDelete(t *testing.T) {
 	// После удаления ключа Get по тому же ключу возвращает nil, false
 	c.Set(setKey, setValue1, setTtl)
 	c.Delete(setKey)
-	actualValue, ok := c.Get(setKey)
-	assert.False(t, ok)
+	actualValue, err := c.Get(setKey)
+	assert.Error(t, err)
 	assert.Equal(t, nil, actualValue)
 
 	// После удаления можно заново добвить элемент с тем же ключом
 	c.Set(setKey, setValue2, setTtl)
-	actualValue, ok = c.Get(setKey)
-	assert.True(t, ok)
+	actualValue, err = c.Get(setKey)
+	assert.NoError(t, err)
 	assert.Equal(t, setValue2, actualValue)
 
 	c.Stop()
