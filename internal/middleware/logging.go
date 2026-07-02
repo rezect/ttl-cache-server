@@ -6,20 +6,23 @@ import (
 	"time"
 )
 
-type ResponceWriterWrapper struct {
+type ResponseWriterWrapper  struct {
 	original http.ResponseWriter
 	status   int
 }
 
-func (w *ResponceWriterWrapper) Header() http.Header {
+func (w *ResponseWriterWrapper ) Header() http.Header {
 	return w.original.Header()
 }
 
-func (w *ResponceWriterWrapper) Write(b []byte) (int, error) {
+func (w *ResponseWriterWrapper ) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.status = 200
+	}
 	return w.original.Write(b)
 }
 
-func (w *ResponceWriterWrapper) WriteHeader(statusCode int) {
+func (w *ResponseWriterWrapper ) WriteHeader(statusCode int) {
 	w.status = statusCode
 	w.original.WriteHeader(w.status)
 }
@@ -27,7 +30,7 @@ func (w *ResponceWriterWrapper) WriteHeader(statusCode int) {
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		beginTime := time.Now()
-		wrapper := &ResponceWriterWrapper{
+		wrapper := &ResponseWriterWrapper {
 			original: w,
 			status:   0,
 		}
