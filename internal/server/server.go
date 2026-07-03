@@ -16,7 +16,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-type PostRequest struct {
+type postRequest struct {
 	Value any    `json:"value"`
 	Ttl   string `json:"ttl"`
 }
@@ -72,7 +72,7 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 	key := r.PathValue("key")
-	var req PostRequest
+	var req postRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		response.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
