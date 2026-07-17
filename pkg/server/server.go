@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rezect/ttl-cache-server/internal/cache"
+	"github.com/rezect/ttl-cache-server/pkg/cache"
 	"github.com/rezect/ttl-cache-server/internal/middleware"
 	"github.com/rezect/ttl-cache-server/internal/response"
 )

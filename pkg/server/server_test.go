@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rezect/ttl-cache-server/internal/server"
+	"github.com/rezect/ttl-cache-server/pkg/server"
 	"github.com/stretchr/testify/assert"
 )
 
