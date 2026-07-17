@@ -1,4 +1,4 @@
-module github.com/rezect/go-interview
+module github.com/rezect/ttl-cache-server
 
 go 1.25.5
 
