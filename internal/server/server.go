@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rezect/go-interview/internal/cache"
-	"github.com/rezect/go-interview/internal/middleware"
-	"github.com/rezect/go-interview/internal/response"
+	"github.com/rezect/ttl-cache-server/internal/cache"
+	"github.com/rezect/ttl-cache-server/internal/middleware"
+	"github.com/rezect/ttl-cache-server/internal/response"
 )
 
 type Server struct {

@@ -43,8 +43,8 @@
 
 ```bash
 # Клонируем репозиторий
-git clone https://github.com/rezect/go-interview.git
-cd go-interview
+git clone https://github.com/rezect/ttl-cache-server.git
+cd ttl-cache-server
 
 # Скачиваем зависимости (только для тестов)
 go mod download
@@ -110,7 +110,7 @@ import (
     "context"
     "log"
     "time"
-    "github.com/rezect/go-interview/pkg/githubclient"
+    "github.com/rezect/ttl-cache-server/pkg/githubclient"
 )
 
 func main() {
@@ -190,7 +190,7 @@ go test -v ./...
 ## 📁 Структура проекта
 
 ```
-go-interview/
+ttl-cache-server/
 ├── cmd/
 │   └── server/
 │       └── main.go              # точка входа, запуск сервера и graceful shutdown

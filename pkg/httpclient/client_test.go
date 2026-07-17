@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rezect/go-interview/pkg/httpclient"
+	"github.com/rezect/ttl-cache-server/pkg/httpclient"
 )
 
 func returnOK(w http.ResponseWriter, t *testing.T) {

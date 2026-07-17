@@ -10,7 +10,7 @@
 		"syscall"
 
 		"github.com/joho/godotenv"
-		"github.com/rezect/go-interview/internal/server"
+		"github.com/rezect/ttl-cache-server/internal/server"
 	)
 
 	func main() {

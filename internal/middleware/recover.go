@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/rezect/go-interview/internal/response"
+	"github.com/rezect/ttl-cache-server/internal/response"
 )
 
 func RecoverMiddleware(next http.Handler) http.Handler {
